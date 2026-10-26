@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <string.h>
 #include <unistd.h>
+#include <pthread.h>
 #include "../src/hardware/matrix_keypad.h"
 #include "../src/hardware/config_manager.h"
 
@@ -291,6 +292,35 @@ static void test_background_thread_scanning(void) {
     printf("  [PASS] test_background_thread_scanning\n");
 }
 
+static void *stop_worker(void *arg) {
+    (void)arg;
+    matrix_keypad_stop();
+    return NULL;
+}
+
+static void test_concurrent_stop_race(void) {
+    printf("Running test_concurrent_stop_race...\n");
+    reset_test_tracker();
+
+    keypad_config_t cfg;
+    config_set_defaults(NULL, &cfg);
+    cfg.keypad_enabled = 1;
+    assert(matrix_keypad_init(&cfg, test_callback) == 0);
+
+    matrix_keypad_start_thread();
+
+    pthread_t t1, t2;
+    pthread_create(&t1, NULL, stop_worker, NULL);
+    pthread_create(&t2, NULL, stop_worker, NULL);
+
+    pthread_join(t1, NULL);
+    pthread_join(t2, NULL);
+
+    /* Verify driver is stopped cleanly */
+    matrix_keypad_stop();
+    printf("  [PASS] test_concurrent_stop_race\n");
+}
+
 int main(void) {
     printf("Starting test_matrix_keypad...\n");
     test_step1_brief_scenario();
@@ -300,6 +330,7 @@ int main(void) {
     test_gpio25_safety_lockout();
     test_null_and_disabled_safety();
     test_background_thread_scanning();
+    test_concurrent_stop_race();
     printf("test_matrix_keypad PASSED\n");
     return 0;
 }

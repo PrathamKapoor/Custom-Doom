@@ -102,15 +102,18 @@ static int linux_gpio_init(const keypad_config_t *cfg) {
         return 0;
     }
 
-    /* Request 4 output lines for rows (active low, default HIGH) */
+    /* Request 4 output lines for rows (active low, open-drain to avoid electrical contention) */
     struct gpiohandle_request row_req;
     memset(&row_req, 0, sizeof(row_req));
     for (int i = 0; i < MATRIX_KEYPAD_ROWS; i++) {
         row_req.lineoffsets[i] = (unsigned int)cfg->row_pins[i];
-        row_req.default_values[i] = 1; /* Idle HIGH */
+        row_req.default_values[i] = 1; /* Idle HIGH (released / floating in open-drain) */
     }
     row_req.lines = MATRIX_KEYPAD_ROWS;
     row_req.flags = GPIOHANDLE_REQUEST_OUTPUT;
+#ifdef GPIOHANDLE_REQUEST_OPEN_DRAIN
+    row_req.flags |= GPIOHANDLE_REQUEST_OPEN_DRAIN;
+#endif
     snprintf(row_req.consumer_label, sizeof(row_req.consumer_label), "doom_keypad_rows");
 
     if (ioctl(s_chip_fd, GPIO_GET_LINEHANDLE_IOCTL, &row_req) < 0) {
@@ -119,7 +122,7 @@ static int linux_gpio_init(const keypad_config_t *cfg) {
     }
     s_row_handle_fd = row_req.fd;
 
-    /* Request 4 input lines for columns */
+    /* Request 4 input lines for columns with internal pull-ups */
     struct gpiohandle_request col_req;
     memset(&col_req, 0, sizeof(col_req));
     for (int i = 0; i < MATRIX_KEYPAD_COLS; i++) {
@@ -127,6 +130,9 @@ static int linux_gpio_init(const keypad_config_t *cfg) {
     }
     col_req.lines = MATRIX_KEYPAD_COLS;
     col_req.flags = GPIOHANDLE_REQUEST_INPUT;
+#ifdef GPIOHANDLE_REQUEST_BIAS_PULL_UP
+    col_req.flags |= GPIOHANDLE_REQUEST_BIAS_PULL_UP;
+#endif
     snprintf(col_req.consumer_label, sizeof(col_req.consumer_label), "doom_keypad_cols");
 
     if (ioctl(s_chip_fd, GPIO_GET_LINEHANDLE_IOCTL, &col_req) < 0) {
@@ -369,16 +375,22 @@ void matrix_keypad_start_thread(void) {
 
 void matrix_keypad_stop(void) {
     pthread_mutex_lock(&s_lock);
-    int was_started = s_thread_started;
+    if (!s_thread_started) {
+        pthread_mutex_unlock(&s_lock);
+#if defined(__linux__)
+        pthread_mutex_lock(&s_lock);
+        linux_gpio_cleanup();
+        pthread_mutex_unlock(&s_lock);
+#endif
+        return;
+    }
+
     s_thread_running = 0;
+    s_thread_started = 0;
+    pthread_t thread_to_join = s_thread;
     pthread_mutex_unlock(&s_lock);
 
-    if (was_started) {
-        pthread_join(s_thread, NULL);
-        pthread_mutex_lock(&s_lock);
-        s_thread_started = 0;
-        pthread_mutex_unlock(&s_lock);
-    }
+    pthread_join(thread_to_join, NULL);
 
 #if defined(__linux__)
     pthread_mutex_lock(&s_lock);
