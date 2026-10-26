@@ -256,6 +256,15 @@ touch_game_actions_t touch_overlay_get_actions(void) {
     return g_actions;
 }
 
+void touch_overlay_clear_turn_impulse(void) {
+    for (int i = 0; i < MAX_TOUCH_FINGERS; i++) {
+        if (g_fingers[i].active && g_fingers[i].zone == TOUCH_ZONE_LOOK) {
+            g_fingers[i].turn_speed = 0.0f;
+        }
+    }
+    g_actions.turn_speed = 0.0f;
+}
+
 void touch_overlay_transform_raw(int raw_x, int raw_y, float *norm_x, float *norm_y) {
     float u = clampf((float)raw_x / 4095.0f, 0.0f, 1.0f);
     float v = clampf((float)raw_y / 4095.0f, 0.0f, 1.0f);

@@ -128,6 +128,12 @@ float touch_overlay_get_opacity(void);
 void touch_overlay_cycle_hud_visibility(void);
 
 /**
+ * @brief Clear instantaneous turn speed impulses across active look touches.
+ *        Called after consuming turn impulse in a game tick to prevent runaway spinning.
+ */
+void touch_overlay_clear_turn_impulse(void);
+
+/**
  * @brief Query current floating stick status and pixel positions (for HUD rendering).
  * @return 1 if stick is active, 0 otherwise.
  */
