@@ -15,8 +15,29 @@ extern "C" {
   #endif
 #endif
 
-#ifndef _SDL_H
+#if !defined(_SDL_H) && !defined(SDL_h_)
 typedef struct SDL_Renderer SDL_Renderer;
+
+typedef struct SDL_Rect {
+    int x, y;
+    int w, h;
+} SDL_Rect;
+
+typedef enum {
+    SDL_BLENDMODE_NONE = 0x00000000,
+    SDL_BLENDMODE_BLEND = 0x00000001,
+    SDL_BLENDMODE_ADD = 0x00000002,
+    SDL_BLENDMODE_MOD = 0x00000004,
+    SDL_BLENDMODE_MUL = 0x00000008,
+    SDL_BLENDMODE_INVALID = 0x7FFFFFFF
+} SDL_BlendMode;
+
+int SDL_SetRenderDrawBlendMode(SDL_Renderer *renderer, SDL_BlendMode blendMode);
+int SDL_SetRenderDrawColor(SDL_Renderer *renderer, unsigned char r, unsigned char g, unsigned char b, unsigned char a);
+int SDL_RenderFillRect(SDL_Renderer *renderer, const SDL_Rect *rect);
+int SDL_RenderDrawRect(SDL_Renderer *renderer, const SDL_Rect *rect);
+int SDL_RenderDrawLine(SDL_Renderer *renderer, int x1, int y1, int x2, int y2);
+int SDL_RenderDrawPoint(SDL_Renderer *renderer, int x, int y);
 #endif
 
 #define TOUCH_STICK_MAX_RADIUS 60.0f
