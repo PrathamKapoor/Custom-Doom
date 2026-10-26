@@ -4,3 +4,6 @@
 *.a
 *.so
 *.dll
+.superpowers/
+tmp_config_test/
+build/

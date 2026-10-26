@@ -501,6 +501,52 @@ static void test_display_scaler_and_present(void) {
     printf("  [PASS] test_display_scaler_and_present\n");
 }
 
+#include <pthread.h>
+
+#define CONCURRENT_TEST_COUNT 1000
+static void *concurrent_producer_func(void *arg) {
+    (void)arg;
+    for (int i = 0; i < CONCURRENT_TEST_COUNT; i++) {
+        event_t ev = { ev_keydown, i % 128, 0, 0 };
+        doom_bridge_post_event(&ev);
+    }
+    return NULL;
+}
+
+static void *concurrent_consumer_func(void *arg) {
+    int *consumed = (int *)arg;
+    for (int i = 0; i < CONCURRENT_TEST_COUNT; i++) {
+        event_t ev;
+        if (doom_bridge_get_event(&ev)) {
+            (*consumed)++;
+        }
+    }
+    return NULL;
+}
+
+static void test_shutdown_and_concurrency(void) {
+    printf("Running test_shutdown_and_concurrency...\n");
+    doom_bridge_init_headless();
+    doom_bridge_clear_events();
+
+    pthread_t prod, cons;
+    int consumed = 0;
+    assert(pthread_create(&prod, NULL, concurrent_producer_func, NULL) == 0);
+    assert(pthread_create(&cons, NULL, concurrent_consumer_func, &consumed) == 0);
+
+    pthread_join(prod, NULL);
+    pthread_join(cons, NULL);
+
+    int remaining = doom_bridge_get_queued_events_count();
+    assert(remaining >= 0 && remaining <= 256);
+
+    doom_bridge_shutdown();
+    assert(doom_bridge_get_queued_events_count() == 0);
+    assert(doom_bridge_is_fire_active() == 0);
+
+    printf("  [PASS] test_shutdown_and_concurrency\n");
+}
+
 int main(void) {
     printf("Starting test_event_bridge suite...\n");
     test_step1_brief_scenario();
@@ -510,6 +556,7 @@ int main(void) {
     test_turn_impulse_cleared_per_frame();
     test_sdl_event_pumping_and_forwarding();
     test_display_scaler_and_present();
+    test_shutdown_and_concurrency();
     printf("test_event_bridge PASSED\n");
     return 0;
 }

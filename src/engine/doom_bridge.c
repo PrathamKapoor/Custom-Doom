@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <pthread.h>
 
 #define EVENT_QUEUE_MAX 256
 #define MOVE_THRESHOLD 0.20f
@@ -17,7 +18,8 @@ static keypad_config_t g_keypad_config;
 
 static doom_post_event_cb_t g_post_event_cb = NULL;
 
-/* Event queue */
+/* Thread-safe event queue */
+static pthread_mutex_t g_event_mutex = PTHREAD_MUTEX_INITIALIZER;
 static event_t g_event_queue[EVENT_QUEUE_MAX];
 static int     g_queue_head = 0;
 static int     g_queue_tail = 0;
@@ -157,9 +159,18 @@ void doom_bridge_init_headless(void) {
     reset_internal_state();
 }
 
+void doom_bridge_shutdown(void) {
+    matrix_keypad_stop();
+    reset_internal_state();
+    g_window = NULL;
+    g_renderer = NULL;
+    g_is_headless = 1;
+}
+
 void doom_bridge_post_event(const event_t *ev) {
     if (ev == NULL) return;
 
+    pthread_mutex_lock(&g_event_mutex);
     if (g_queue_count < EVENT_QUEUE_MAX) {
         g_event_queue[g_queue_head] = *ev;
         g_queue_head = (g_queue_head + 1) % EVENT_QUEUE_MAX;
@@ -170,6 +181,7 @@ void doom_bridge_post_event(const event_t *ev) {
         g_queue_head = (g_queue_head + 1) % EVENT_QUEUE_MAX;
         g_queue_tail = (g_queue_tail + 1) % EVENT_QUEUE_MAX;
     }
+    pthread_mutex_unlock(&g_event_mutex);
 
     if (g_post_event_cb != NULL) {
         g_post_event_cb(ev);
@@ -177,32 +189,51 @@ void doom_bridge_post_event(const event_t *ev) {
 }
 
 int doom_bridge_get_event(event_t *ev) {
-    if (g_queue_count <= 0 || ev == NULL) {
+    if (ev == NULL) {
+        return 0;
+    }
+
+    pthread_mutex_lock(&g_event_mutex);
+    if (g_queue_count <= 0) {
+        pthread_mutex_unlock(&g_event_mutex);
         return 0;
     }
     *ev = g_event_queue[g_queue_tail];
     g_queue_tail = (g_queue_tail + 1) % EVENT_QUEUE_MAX;
     g_queue_count--;
+    pthread_mutex_unlock(&g_event_mutex);
     return 1;
 }
 
 int doom_bridge_peek_event(int offset, event_t *ev) {
-    if (offset < 0 || offset >= g_queue_count || ev == NULL) {
+    if (offset < 0 || ev == NULL) {
+        return 0;
+    }
+
+    pthread_mutex_lock(&g_event_mutex);
+    if (offset >= g_queue_count) {
+        pthread_mutex_unlock(&g_event_mutex);
         return 0;
     }
     int idx = (g_queue_tail + offset) % EVENT_QUEUE_MAX;
     *ev = g_event_queue[idx];
+    pthread_mutex_unlock(&g_event_mutex);
     return 1;
 }
 
 int doom_bridge_get_queued_events_count(void) {
-    return g_queue_count;
+    pthread_mutex_lock(&g_event_mutex);
+    int count = g_queue_count;
+    pthread_mutex_unlock(&g_event_mutex);
+    return count;
 }
 
 void doom_bridge_clear_events(void) {
+    pthread_mutex_lock(&g_event_mutex);
     g_queue_head = 0;
     g_queue_tail = 0;
     g_queue_count = 0;
+    pthread_mutex_unlock(&g_event_mutex);
 }
 
 void doom_bridge_set_post_event_callback(doom_post_event_cb_t cb) {

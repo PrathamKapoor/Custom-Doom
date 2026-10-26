@@ -195,6 +195,11 @@ void doom_bridge_init(SDL_Window *window, SDL_Renderer *renderer);
 void doom_bridge_init_headless(void);
 
 /**
+ * @brief Cleanly shut down Doom event bridge and stop background keypad scanning thread.
+ */
+void doom_bridge_shutdown(void);
+
+/**
  * @brief Pump SDL events, query touch/keypad states, and generate Doom event queue entries.
  *        CRITICAL: Consumes turn_speed as an instantaneous impulse and clears it per frame.
  */
