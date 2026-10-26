@@ -13,7 +13,10 @@ fi
 RULE='KERNEL=="uinput", GROUP="input", MODE="0660", OPTIONS+="static_node=uinput"'
 printf '%s\n' "$RULE" | $SUDO tee /etc/udev/rules.d/70-custom-doom-uinput.rules >/dev/null
 $SUDO udevadm control --reload-rules
-$SUDO udevadm trigger --name-match=uinput || true
+if [[ -e /dev/uinput ]]; then
+    $SUDO chgrp input /dev/uinput
+    $SUDO chmod 0660 /dev/uinput
+fi
 
 if [[ -n "${DISPLAY:-}" ]] && ! pgrep -x xcompmgr >/dev/null 2>&1; then
     xcompmgr -aR >/dev/null 2>&1 &
