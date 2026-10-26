@@ -166,7 +166,9 @@ def main():
     try:
         import evdev
         device = discover_device(evdev)
-        ui = evdev.UInput(events={evdev.ecodes.EV_KEY: list(evdev.ecodes.KEY.keys()), evdev.ecodes.EV_REL: [evdev.ecodes.REL_X]})
+        key_codes = {getattr(evdev.ecodes, code) for mapping in KEYS.values() for code in mapping}
+        key_codes.add(evdev.ecodes.KEY_PAUSE)
+        ui = evdev.UInput(events={evdev.ecodes.EV_KEY: sorted(key_codes), evdev.ecodes.EV_REL: [evdev.ecodes.REL_X]})
     except Exception as exc:
         print(f"Touch HUD unavailable: {exc}", file=sys.stderr)
         return 2
