@@ -1,0 +1,7 @@
+# Touchscreen Configuration Template for 3.5" (480x320) XPT2046 Display
+[touch]
+enabled = 1
+opacity = 0.55
+dpad_deadzone = 15
+turn_sensitivity = 1.2
+screen_rotation = 270

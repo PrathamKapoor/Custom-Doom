@@ -1,9 +1,42 @@
+# Compiled Object files and Binaries
 *.exe
 *.o
 *.obj
 *.a
 *.so
 *.dll
-.superpowers/
-tmp_config_test/
+*.dylib
+bin/
 build/
+
+# Local Doom config and runtime files
+doom_touch.cfg
+doom_keypad.cfg
+tmp_config_test/
+*.log
+
+# Doom IWAD game assets (downloaded on demand via scripts/download_wad.sh)
+*.wad
+*.WAD
+wads/
+
+# Python caches and virtual environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Environment files
+.env
+.env.*
+
+# OS and Editor metadata
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.dSYM/
+
+# Superpowers temporary artifacts
+.superpowers/

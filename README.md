@@ -136,8 +136,8 @@ The 16 physical buttons translate directly to classic Doom actions:
 
 ### Step 1: Clone Repository
 ```bash
-git clone https://github.com/example/rpi-doom-touch.git
-cd rpi-doom-touch
+git clone https://github.com/PrathamKapoor/Custom-Doom.git
+cd Custom-Doom
 ```
 
 ### Step 2: Install System Dependencies
