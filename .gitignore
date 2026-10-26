@@ -40,3 +40,6 @@ Thumbs.db
 
 # Superpowers temporary artifacts
 .superpowers/
+
+# Local linked worktrees
+.worktrees/
