@@ -146,15 +146,18 @@ int config_load(const char *dir_path, touch_config_t *tcfg, keypad_config_t *kcf
 
     char path[1024];
     char line[256];
+    int files_loaded = 0;
 
     // Load touch config
     if (tcfg) {
         config_set_defaults(tcfg, NULL);
-
-        snprintf(path, sizeof(path), "%s/doom_touch.cfg", dir);
-        FILE *fp = fopen(path, "r");
-        if (fp) {
-            while (fgets(line, sizeof(line), fp)) {
+    }
+    snprintf(path, sizeof(path), "%s/doom_touch.cfg", dir);
+    FILE *fp_touch = fopen(path, "r");
+    if (fp_touch) {
+        files_loaded++;
+        if (tcfg) {
+            while (fgets(line, sizeof(line), fp_touch)) {
                 char *trimmed = trim_whitespace(line);
                 if (trimmed[0] == '\0' || trimmed[0] == '#' || trimmed[0] == ';') continue;
                 if (trimmed[0] == '[') continue; // Section header
@@ -178,18 +181,20 @@ int config_load(const char *dir_path, touch_config_t *tcfg, keypad_config_t *kcf
                     }
                 }
             }
-            fclose(fp);
         }
+        fclose(fp_touch);
     }
 
     // Load keypad config
     if (kcfg) {
         config_set_defaults(NULL, kcfg);
-
-        snprintf(path, sizeof(path), "%s/doom_keypad.cfg", dir);
-        FILE *fp = fopen(path, "r");
-        if (fp) {
-            while (fgets(line, sizeof(line), fp)) {
+    }
+    snprintf(path, sizeof(path), "%s/doom_keypad.cfg", dir);
+    FILE *fp_keypad = fopen(path, "r");
+    if (fp_keypad) {
+        files_loaded++;
+        if (kcfg) {
+            while (fgets(line, sizeof(line), fp_keypad)) {
                 char *trimmed = trim_whitespace(line);
                 if (trimmed[0] == '\0' || trimmed[0] == '#' || trimmed[0] == ';') continue;
                 if (trimmed[0] == '[') continue;
@@ -213,12 +218,12 @@ int config_load(const char *dir_path, touch_config_t *tcfg, keypad_config_t *kcf
                     }
                 }
             }
-            fclose(fp);
+            enforce_gpio_safety(kcfg);
         }
-        enforce_gpio_safety(kcfg);
+        fclose(fp_keypad);
     }
 
-    return 0;
+    return (files_loaded > 0) ? 0 : -1;
 }
 
 int config_save(const char *dir_path, const touch_config_t *tcfg, const keypad_config_t *kcfg) {

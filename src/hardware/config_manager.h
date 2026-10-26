@@ -39,7 +39,7 @@ void config_set_defaults(touch_config_t *tcfg, keypad_config_t *kcfg);
  *                 If NULL or empty, defaults to "~/.doom-touch".
  * @param tcfg Output touch configuration struct (can be NULL if not needed).
  * @param kcfg Output keypad configuration struct (can be NULL if not needed).
- * @return 0 on success, non-zero on failure.
+ * @return 0 if at least one file was successfully read, -1 if neither existed on disk.
  */
 int config_load(const char *dir_path, touch_config_t *tcfg, keypad_config_t *kcfg);
 

@@ -41,18 +41,30 @@ if [ ! -f "$IWAD_USER" ] && [ ! -f "$IWAD_REPO" ]; then
     fi
 fi
 
-# 3. Environment detection: X11 vs Pure Linux Console / KMSDRM
-if [ -n "$DISPLAY" ]; then
+# 3. Environment & Video Driver Detection (X11, KMSDRM, Framebuffer, or Headless)
+if [ -n "$SDL_VIDEODRIVER" ]; then
+    echo -e "${GREEN}[DISPLAY] Using user-specified SDL_VIDEODRIVER='$SDL_VIDEODRIVER'.${NC}"
+    if [ "$SDL_VIDEODRIVER" != "x11" ] && [ "$SDL_VIDEODRIVER" != "dummy" ]; then
+        export DOOM_FULLSCREEN="1"
+    fi
+elif [ -n "$DISPLAY" ]; then
     echo -e "${GREEN}[DISPLAY] Running under X11 Desktop ($DISPLAY).${NC}"
     export SDL_VIDEODRIVER="x11"
 else
-    echo -e "${GREEN}[DISPLAY] Running in Framebuffer / KMSDRM Console mode.${NC}"
+    echo -e "${GREEN}[DISPLAY] Running in Linux Console mode.${NC}"
     # Check for dedicated SPI display framebuffer (typically /dev/fb1)
     if [ -e "/dev/fb1" ]; then
         echo -e "${GREEN}[DISPLAY] Detected SPI TFT framebuffer at /dev/fb1.${NC}"
+        echo -e "${CYAN}[DIAGNOSTIC] SPI TFT Console Display Architecture:${NC}"
+        echo -e "  - Modern Raspberry Pi OS (Bullseye/Bookworm) uses KMSDRM with fbcp mirroring"
+        echo -e "    (SDL2 renders to /dev/fb0 via KMSDRM and fbcp clones frames to /dev/fb1)."
+        echo -e "  - Legacy non-DRM kernels: override with 'SDL_VIDEODRIVER=fbcon'."
+        echo -e "  - Headless/testing: override with 'SDL_VIDEODRIVER=dummy'."
+        echo -e "  - Desktop: run within an X11 session or set 'SDL_VIDEODRIVER=x11'."
         export SDL_FBDEV="/dev/fb1"
-        export SDL_VIDEODRIVER="fbcon"
+        export SDL_VIDEODRIVER="KMSDRM"
     else
+        echo -e "${GREEN}[DISPLAY] Using KMSDRM driver for direct hardware display output.${NC}"
         export SDL_VIDEODRIVER="KMSDRM"
     fi
     export DOOM_FULLSCREEN="1"

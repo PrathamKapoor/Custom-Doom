@@ -579,6 +579,8 @@ int main(int argc, char *argv[]) {
 
     /* 5. Initialize Doom event bridge & display scaler */
     doom_bridge_init(window, renderer);
+    doom_bridge_set_touch_config(&touch_cfg);
+    doom_bridge_set_keypad_config(&keypad_cfg);
 
     printf("[ENGINE] Doom event bridge initialized. Starting 60 FPS interactive loop...\n");
 

@@ -43,13 +43,21 @@ int main(void) {
     config_set_defaults(NULL, &kcfg);
     assert(kcfg.col_pins[1] == 5);
 
-    // Save defaults to test dir
+    // First-run behavior: verify config_load returns -1 when no cfg files exist on disk
     const char *test_dir = "./tmp_config_test";
-    assert(config_save(test_dir, &tcfg, &kcfg) == 0);
-
-    // Load back from test dir
     touch_config_t loaded_t;
     keypad_config_t loaded_k;
+    memset(&loaded_t, 0, sizeof(loaded_t));
+    memset(&loaded_k, 0, sizeof(loaded_k));
+    assert(config_load(test_dir, &loaded_t, &loaded_k) == -1);
+    // Factory defaults should still be populated
+    assert(loaded_t.touch_enabled == 1);
+    assert(loaded_k.col_pins[1] == 5);
+
+    // Save defaults to test dir (as main.c does on clean first run)
+    assert(config_save(test_dir, &tcfg, &kcfg) == 0);
+
+    // Load back from test dir (should return 0 now that files exist)
     memset(&loaded_t, 0, sizeof(loaded_t));
     memset(&loaded_k, 0, sizeof(loaded_k));
     assert(config_load(test_dir, &loaded_t, &loaded_k) == 0);
@@ -100,6 +108,20 @@ int main(void) {
 
     assert(config_load(test_dir, &loaded_t, &loaded_k) == 0);
     assert(loaded_k.col_pins[1] == 5); // Must NEVER allow GPIO 25!
+
+    // Verify partial loading: returns 0 if at least one file exists, -1 if neither
+    remove("./tmp_config_test/doom_touch.cfg");
+    // Only doom_keypad.cfg exists:
+    assert(config_load(test_dir, &loaded_t, &loaded_k) == 0);
+
+    remove("./tmp_config_test/doom_keypad.cfg");
+    // Neither exists now:
+    assert(config_load(test_dir, &loaded_t, &loaded_k) == -1);
+
+    // Save touch only:
+    assert(config_save(test_dir, &tcfg, NULL) == 0);
+    assert(config_load(test_dir, &loaded_t, &loaded_k) == 0);
+    assert(loaded_t.touch_enabled == 0);
 
     // Cleanup test artifacts
     remove("./tmp_config_test/doom_touch.cfg");
