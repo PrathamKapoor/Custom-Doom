@@ -1,8 +1,8 @@
 # Raspberry Pi Doom Touch Overlay Design
 
-**Date:** 2026-10-26  
-**Status:** Approved by user request  
-**Target:** Raspberry Pi 4B running Raspberry Pi OS on a 480×320 XPT2046 SPI touchscreen  
+**Date:** 2026-10-26
+**Status:** Approved by user request
+**Target:** Raspberry Pi 4B running Raspberry Pi OS on a 480×320 XPT2046 SPI touchscreen
 **Engine:** System Chocolate Doom package; game data supplied by Freedoom or the player
 
 ## Goal

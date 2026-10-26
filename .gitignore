@@ -8,12 +8,26 @@
 *.dylib
 bin/
 build/
+dist/
+coverage/
+.coverage
 
 # Local Doom config and runtime files
 doom_touch.cfg
 doom_keypad.cfg
 tmp_config_test/
 *.log
+*.pid
+*.desktop
+
+# Local databases, captures, and runtime state
+*.db
+*.sqlite
+*.sqlite3
+*.dump
+*.core
+screenshots/
+runtime/
 
 # Doom IWAD game assets (downloaded on demand via scripts/download_wad.sh)
 *.wad
@@ -29,6 +43,12 @@ venv/
 # Environment files
 .env
 .env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+service-account*.json
+secrets.json
 
 # OS and Editor metadata
 .DS_Store
