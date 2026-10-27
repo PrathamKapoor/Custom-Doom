@@ -31,6 +31,18 @@ Open **Custom Doom** from the desktop. The launcher starts map 1 fullscreen and 
 
 Crispy Doom enables mouse look and vertical aiming by default. On its first launch the launcher copies existing Chocolate Doom settings, including mouse bindings, into separate files under `~/.doom-touch/`; later changes to those files are preserved. Chocolate Doom and Crispy Doom keep their own save games. The classic Chocolate Doom fallback does not support vertical mouse look.
 
+## Windows control panel
+
+The Windows laptop app connects over SSH to a Pi with this repository checked out at `~/Custom-Doom`. It shows the game and Pi status and lets you launch or stop the game, change the side and middle mouse buttons, and adjust mouse look, vertical aiming, sensitivity and rendering quality. Applying settings while a game is running restarts the current level.
+
+On Windows, install Python 3 and run once from PowerShell:
+
+```powershell
+./desktop/setup.ps1
+```
+
+Then open `desktop/launch.cmd`, enter the Pi's address, username and password, and select **Connect**. The app remembers the address and username locally; it does not save the password. It checks the Pi's SSH host key against the Windows user's existing `~/.ssh/known_hosts` file. Establish and verify a normal SSH connection to the Pi first if its host key is not yet known. The laptop and Pi must be able to reach each other on the network.
+
 ## Keypad wiring
 
 With the USB ports at the top, connect the ribbon wires to these physical header pins. Wires 1–4 form the matrix rows and wires 5–8 form its columns.
@@ -82,7 +94,7 @@ The overlay uses the ADS7846 calibration measured for this display. Set `DOOM_TO
 
 ## Requirements and troubleshooting
 
-- `crispy-doom`, `chocolate-doom`, `freedoom`, `python3-tk`, `python3-evdev`, `python3-rpi-lgpio`, and `xcompmgr` (installed by the script).
+- `crispy-doom`, `chocolate-doom`, `freedoom`, `python3-tk`, `python3-evdev`, `python3-rpi-lgpio`, `xcompmgr`, and `xinput` (installed by the script).
 - A logged-in X11 desktop; the overlay needs X11 alpha compositing.
 - If keyboard play works but touch buttons do not, log out and in if the installer just added `input` group membership, then check that `/dev/uinput` belongs to group `input` with group read/write permission.
 - If the game starts with a missing IWAD message, confirm `freedoom1.wad` is installed or set `DOOM_IWAD` to a WAD file you are allowed to use.
@@ -108,7 +120,8 @@ The C prototype and its GPIO matrix diagnostic are separate from the Chocolate D
 
 ## Repository contents
 
-- `scripts/game_session.py`, `scripts/launch.sh`: launch Chocolate Doom and tie the HUD lifetime to the game.
+- `scripts/game_session.py`, `scripts/launch.sh`: launch Doom and tie the HUD lifetime to the game.
+- `desktop/`, `scripts/control_api.py`: Windows control panel and its Pi-side SSH endpoint.
 - `scripts/touch_controls.py`: tested touch calibration and control state mapping.
 - `scripts/touch_hud.py`: Tk/evdev translucent overlay.
 - `scripts/keypad_controls.py`, `scripts/keypad_bridge.py`: tested controls and the BCM keypad scanner.

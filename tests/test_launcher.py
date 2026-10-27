@@ -35,6 +35,15 @@ class LauncherTests(unittest.TestCase):
             launch_config.prepare_crispy_config(home)
             self.assertEqual(extra.read_text(), 'user customized\n')
 
+    def test_fresh_crispy_config_has_playable_mouse_defaults(self):
+        with tempfile.TemporaryDirectory() as td:
+            main, extra = launch_config.prepare_crispy_config(Path(td))
+            self.assertIn('mouseb_forward 6', main.read_text())
+            self.assertIn('mouseb_use 2', extra.read_text())
+            self.assertIn('mouseb_backward 5', extra.read_text())
+            self.assertIn('mouseb_prevweapon 3', extra.read_text())
+            self.assertIn('mouseb_nextweapon 4', extra.read_text())
+
     def test_iwad_override_precedes_system_and_repo(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)

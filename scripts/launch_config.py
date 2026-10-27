@@ -69,7 +69,9 @@ def prepare_crispy_config(home: Path) -> tuple[Path, Path]:
             if source.is_file():
                 shutil.copyfile(source, target)
             else:
-                target.write_text("", encoding="utf-8")
+                defaults = ("mouseb_forward 6\nmouseb_speed -1\n" if target == main else
+                            "mouseb_use 2\nmouseb_backward 5\nmouseb_prevweapon 3\nmouseb_nextweapon 4\n")
+                target.write_text(defaults, encoding="utf-8")
             if target == extra:
                 with target.open("a", encoding="utf-8") as config:
                     config.write("\ncrispy_freelook 1\ncrispy_mouselook 1\ncrispy_freeaim 1\ncrispy_hires 0\n")
