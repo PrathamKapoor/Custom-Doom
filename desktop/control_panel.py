@@ -274,6 +274,9 @@ class ControlPanel(ctk.CTk):
         if not host or not user:
             self.message.configure(text='Enter the Pi address and username.', text_color='#f2a0a0')
             return
+        self.connected = False
+        self.connection_badge.configure(text='●  OFFLINE', text_color=MUTED)
+        self.set_buttons()
         self.password.delete(0, 'end')
         self.message.configure(text='Connecting to the Pi…', text_color=MUTED)
         def operation():

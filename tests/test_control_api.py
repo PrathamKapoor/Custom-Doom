@@ -1,6 +1,7 @@
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
@@ -26,6 +27,15 @@ class ControlApiTests(unittest.TestCase):
             self.assertIn('mouseb_forward 6\n', contents)
             self.assertIn('sfx_volume 8\n', contents)
             self.assertIn('crispy_mouselook 1\n', contents)
+
+    def test_settings_round_trip_with_separate_config_files(self):
+        with tempfile.TemporaryDirectory() as td:
+            home = Path(td)
+            settings = {'forward': 6, 'backward': 5, 'use': 2, 'mouselook': True,
+                        'freeaim': True, 'hires': False, 'sensitivity': 7}
+            with patch.object(control_api.Path, 'home', return_value=home):
+                control_api.apply_settings(settings)
+            self.assertEqual(control_api.read_settings(home), settings)
 
 
 if __name__ == '__main__':

@@ -35,13 +35,15 @@ Crispy Doom enables mouse look and vertical aiming by default. On its first laun
 
 The Windows laptop app connects over SSH to a Pi with this repository checked out at `~/Custom-Doom`. It shows the game and Pi status and lets you launch or stop the game, change the side and middle mouse buttons, and adjust mouse look, vertical aiming, sensitivity and rendering quality. Applying settings while a game is running restarts the current level.
 
-On Windows, install Python 3 and run once from PowerShell:
+On Windows, install Python 3.10 or newer and run once from PowerShell:
 
 ```powershell
 ./desktop/setup.ps1
 ```
 
 Then open `desktop/launch.cmd`, enter the Pi's address, username and password, and select **Connect**. The app remembers the address and username locally; it does not save the password. It checks the Pi's SSH host key against the Windows user's existing `~/.ssh/known_hosts` file. Establish and verify a normal SSH connection to the Pi first if its host key is not yet known. The laptop and Pi must be able to reach each other on the network.
+
+For a fresh configuration, mouse movement aims, left click fires, right click enables strafing, the front and rear side buttons move forward and backward, pressing the wheel uses doors and switches, and scrolling changes weapons. Existing Chocolate Doom bindings are copied when available. The control panel can change the three movement and use bindings.
 
 ## Keypad wiring
 
