@@ -1,6 +1,6 @@
 # Custom Doom Touch
 
-Play Doom on Raspberry Pi OS with the system Chocolate Doom port and a compact translucent touch overlay. The repository contains the launcher and controls; it does not contain the Doom engine or game data. The included C program is an experimental raycasting chamber, not a Doom port.
+Play Doom on Raspberry Pi OS with Crispy Doom and a compact translucent touch overlay. The launcher falls back to Chocolate Doom when Crispy Doom is unavailable. The repository contains the launcher and controls; it does not contain the Doom engine or game data. The included C program is an experimental raycasting chamber, not a Doom port.
 
 ## Target setup
 
@@ -19,7 +19,7 @@ cd Custom-Doom
 ./scripts/install_dependencies.sh
 ```
 
-The installer uses Raspberry Pi OS packages for Chocolate Doom, Freedoom, Tk, evdev, the Raspberry Pi `rpi-lgpio` GPIO API, and X11 compositing. It adds the logged-in user to the `input` and `gpio` groups if needed and installs a udev rule limited to `/dev/uinput`. Log out and back in if it added a group membership.
+The installer uses Raspberry Pi OS packages for Crispy Doom, Chocolate Doom, Freedoom, Tk, evdev, the Raspberry Pi `rpi-lgpio` GPIO API, and X11 compositing. It adds the logged-in user to the `input` and `gpio` groups if needed and installs a udev rule limited to `/dev/uinput`. Log out and back in if it added a group membership.
 
 Install the desktop and application-menu shortcuts:
 
@@ -28,6 +28,8 @@ Install the desktop and application-menu shortcuts:
 ```
 
 Open **Custom Doom** from the desktop. The launcher starts map 1 fullscreen and runs the touch HUD and keypad scanner only for the lifetime of the game.
+
+Crispy Doom enables mouse look and vertical aiming by default. On its first launch the launcher copies existing Chocolate Doom settings, including mouse bindings, into separate files under `~/.doom-touch/`; later changes to those files are preserved. Chocolate Doom and Crispy Doom keep their own save games. The classic Chocolate Doom fallback does not support vertical mouse look.
 
 ## Keypad wiring
 
@@ -80,7 +82,7 @@ The overlay uses the ADS7846 calibration measured for this display. Set `DOOM_TO
 
 ## Requirements and troubleshooting
 
-- `chocolate-doom`, `freedoom`, `python3-tk`, `python3-evdev`, `python3-rpi-lgpio`, and `xcompmgr` (installed by the script).
+- `crispy-doom`, `chocolate-doom`, `freedoom`, `python3-tk`, `python3-evdev`, `python3-rpi-lgpio`, and `xcompmgr` (installed by the script).
 - A logged-in X11 desktop; the overlay needs X11 alpha compositing.
 - If keyboard play works but touch buttons do not, log out and in if the installer just added `input` group membership, then check that `/dev/uinput` belongs to group `input` with group read/write permission.
 - If the game starts with a missing IWAD message, confirm `freedoom1.wad` is installed or set `DOOM_IWAD` to a WAD file you are allowed to use.

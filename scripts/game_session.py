@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Start installed Chocolate Doom and keep the touch HUD tied to its lifetime."""
+"""Start Doom and keep the touch HUD tied to its lifetime."""
 import os
 from pathlib import Path
 import shutil
@@ -7,12 +7,13 @@ import subprocess
 import sys
 import time
 
-from launch_config import missing_requirements, select_iwad
+from launch_config import (missing_requirements, select_iwad, select_engine, prepare_crispy_config,
+                           apply_legacy_mouse_workaround, restore_mouse_buttons)
 
 
 def main() -> int:
     repo = Path(__file__).resolve().parent.parent
-    game = shutil.which("chocolate-doom")
+    game, is_crispy = select_engine(shutil.which)
     iwad = select_iwad(repo)
     missing = missing_requirements(game, iwad, os.environ.get("DISPLAY"))
     if missing:
@@ -25,7 +26,16 @@ def main() -> int:
     game_env = os.environ.copy()
     # SDL otherwise translates touchscreen contacts into mouse-button presses.
     game_env["SDL_TOUCH_MOUSE_EVENTS"] = "0"
-    game_process = subprocess.Popen([game, "-iwad", str(iwad), "-fullscreen", "-warp", "1"], env=game_env)
+    game_args = [game, "-iwad", str(iwad), "-fullscreen", "-warp", "1"]
+    if is_crispy:
+        main_config, extra_config = prepare_crispy_config(Path.home())
+        game_args += ["-config", str(main_config), "-extraconfig", str(extra_config)]
+    remapped_mice = apply_legacy_mouse_workaround() if is_crispy else []
+    try:
+        game_process = subprocess.Popen(game_args, env=game_env)
+    except OSError:
+        restore_mouse_buttons(remapped_mice)
+        raise
     hud_log = None
     try:
         time.sleep(1.0)
@@ -62,6 +72,7 @@ def main() -> int:
                 except subprocess.TimeoutExpired: helper.kill()
         if hud_log is not None:
             hud_log.close()
+        restore_mouse_buttons(remapped_mice)
 
 
 if __name__ == "__main__":
