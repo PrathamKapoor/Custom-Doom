@@ -15,7 +15,7 @@
 - Target the Pi 4B X11 desktop at 480×320.
 - Do not distribute IWADs or rewrite the Chocolate Doom engine.
 - Respect the single-touch XPT2046 panel; provide auto-fire for one-finger play.
-- Do not access keypad GPIO or change display boot/Xorg configuration.
+- Access only the verified keypad GPIO lines; never use GPIO 25 or change display boot/Xorg configuration.
 - Push only to existing `origin/main`, after secret scan, tests, review, and remote synchronization checks.
 
 ---
@@ -95,3 +95,16 @@
 - [ ] Verify touch input using the connected panel without touching keypad GPIO.
 - [ ] Review `git diff`, `git diff --cached`, `git ls-files`, and secret scan results before committing.
 - [ ] Commit under the configured user identity, merge without rewriting history, push `main`, fetch, and verify local HEAD equals `origin/main`.
+
+### Task 6: Integrate the verified 4×4 keypad and reduce overlay work
+
+**Files:**
+- Create: `scripts/keypad_controls.py`, `scripts/keypad_bridge.py`, `tests/test_keypad_controls.py`
+- Modify: `scripts/game_session.py`, `scripts/install_dependencies.sh`, `scripts/touch_hud.py`, `README.md`
+- Update: `config/doom_keypad.cfg.example`, C keypad defaults and tests
+
+- [ ] Test the exact ribbon-to-BCM map (rows 21,20,16,19; columns 13,12,6,5), key chords, and debounce transitions before adding the scanner.
+- [ ] Drive one active row low at a time, leave other rows high-impedance, and inject debounced key edges through `/dev/uinput`.
+- [ ] Start/stop the keypad process with Chocolate Doom and release held keys on shutdown.
+- [ ] Cache static HUD panels and avoid empty virtual-input syncs to reduce idle overlay CPU work.
+- [ ] Document the key map and wiring; run all Python and C tests, then validate the scanner on the Pi without touching unrelated pins.

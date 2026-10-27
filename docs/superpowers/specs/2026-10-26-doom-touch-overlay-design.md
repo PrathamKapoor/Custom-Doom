@@ -7,7 +7,7 @@
 
 ## Goal
 
-Make the existing Custom-Doom repository launch a real Doom source port on the Pi, provide a compact transparent touch HUD that follows touch input, create a desktop shortcut on the Pi, and publish the verified changes to the existing GitHub repository. Preserve Chocolate Doom's gameplay and existing Git history.
+Make the existing Custom-Doom repository launch a real Doom source port on the Pi, provide a compact transparent touch HUD, make the verified 4x4 GPIO keypad playable, create a desktop shortcut, and publish the verified changes to the existing GitHub repository. Preserve Chocolate Doom's gameplay and existing Git history.
 
 ## Engine choice
 
@@ -22,20 +22,23 @@ The application starts the first map directly so the touch HUD appears only duri
 - Use right-side swipe for horizontal look and touch buttons for fire, use, map, and pause. Controls show visible pressed feedback and have forgiving hit areas for the 480×320 panel.
 - The panel is resistive and reports one touch at a time. Provide a toggle for continuous fire so one touch can move and fire without pretending the screen supports multitouch.
 - Keep the engine's own status bar visible. Avoid a duplicate always-on status panel.
+- Scan the 4x4 keypad at 100 Hz on BCM rows 21,20,16,19 and columns 13,12,6,5, matching ribbon wires 1–8 in the user's verified diagram. Drive only one row low at a time, debounce contacts, and release emulated keys on process shutdown.
+- Map the keypad to movement, strafe, fire, use, automap, run, weapon selection, pause, and escape. Keep touch and keypad input available together.
 - The pause control hides the gameplay controls and offers a compact resume control. The game remains usable with a keyboard.
 
 ## Desktop and installation
 
 - `scripts/launch.sh` locates Chocolate Doom and a configured IWAD, starts directly in gameplay in the current X11 session, and runs the touch HUD alongside the engine.
 - `scripts/install_desktop_shortcut.sh` installs a desktop launcher under the invoking user's Desktop and application menu. It must use the current checkout path, mark the shortcut executable/trusted where supported, and not use sudo.
-- `scripts/install_dependencies.sh` installs Chocolate Doom, Freedoom, Python Tk, Python evdev, and a lightweight X11 compositor needed for alpha blending. It adds only the minimum input permissions needed for touchscreen reads and `/dev/uinput`; it must not rewrite boot display settings or apply a generic event-device rule.
+- `scripts/install_dependencies.sh` installs Chocolate Doom, Freedoom, Python Tk, Python evdev, RPi.GPIO, and a lightweight X11 compositor needed for alpha blending. It adds only the needed `input`/`gpio` permissions and a udev rule limited to `/dev/uinput`; it must not rewrite boot display settings or apply a generic event-device rule.
 - The existing display setup remains system-managed. The project must not replace the user's Xorg configuration or assume every 3.5-inch HAT shares the same pin mapping.
 
 ## Code boundaries
 
 - A pure Python touch-control module owns coordinate transforms, dynamic stick math, hit testing, key state, look deltas, and pause/visibility state. It has no Tk or evdev dependency so it can be unit tested on a desktop.
 - A Tk/evdev HUD module owns transparent rendering and input-device polling. It discovers an ADS7846/XPT2046 touchscreen by device capabilities/name, with an environment variable override; it does not hardcode `/dev/input/event0`.
-- The launcher owns IWAD selection, Chocolate Doom process lifetime, and orderly HUD shutdown. It does not scan or drive GPIO.
+- A pure keypad-control module owns the verified pin map, key bindings, and debounce logic. A GPIO/evdev bridge scans only the eight keypad pins and injects ordinary keyboard events.
+- The launcher owns IWAD selection, Chocolate Doom process lifetime, and orderly HUD/keypad shutdown. It does not change display boot settings or access unrelated GPIO pins.
 
 ## Security and release requirements
 
@@ -51,7 +54,7 @@ The application starts the first map directly so the touch HUD appears only duri
 2. The HUD is translucent, is absent before gameplay and after game exit, and does not cover the original Doom status bar unnecessarily.
 3. The floating stick follows touch dynamically; swipe look, fire, use, map, pause/resume, and auto-fire toggle produce the intended inputs and release cleanly.
 4. Touchscreen discovery finds the ADS7846 device without assuming event number; a documented environment override remains available.
-5. A standard keyboard still controls the game, and the existing keypad remains disabled and untouched.
-6. Pure tests cover calibration, stick/deadzone behavior, target hit-testing, key release, look/button separation, auto-fire, and pause visibility.
+5. A standard keyboard still controls the game, and the keypad uses the user's verified 8-pin wiring with movement/fire combinations and debounced key release.
+6. Pure tests cover calibration, stick/deadzone behavior, target hit-testing, key release, look/button separation, auto-fire, pause visibility, keypad pin validation, key chords, and debounce.
 7. A new clone can install dependencies and create its desktop shortcut without receiving a WAD or changing display boot configuration.
 8. The local repo is pushed to the existing public GitHub `main` branch and remote HEAD is verified equal to the final local commit.

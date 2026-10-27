@@ -1,8 +1,8 @@
-# 4x4 Matrix Keypad Configuration Template for Raspberry Pi 4B
-# NOTE: Physical Pin 22 (GPIO 25) is strictly reserved for SPI LCD D/C.
-# Keypad Column 2 uses GPIO 5 (Physical Pin 29).
+# 4x4 keypad map for the verified Raspberry Pi 4B wiring.
+# Ribbon wires 1-4 are rows; wires 5-8 are columns.
+# BCM GPIO 25 is reserved by the SPI display and must not be used.
 [keypad]
 enabled = 1
-rows = 4,27,22,23
-cols = 24,5,16,26
-debounce_ms = 15
+rows = 21,20,16,19
+cols = 13,12,6,5
+debounce_ms = 20

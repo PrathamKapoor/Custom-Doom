@@ -27,21 +27,28 @@ int main(void) {
 
     // Verify keypad defaults
     assert(kcfg.keypad_enabled == 0);
-    assert(kcfg.row_pins[0] == 4);
-    assert(kcfg.row_pins[1] == 27);
-    assert(kcfg.row_pins[2] == 22);
-    assert(kcfg.row_pins[3] == 23);
-    assert(kcfg.col_pins[0] == 24);
-    assert(kcfg.col_pins[1] == 5); // CRITICAL: Must be GPIO 5, NOT GPIO 25!
-    assert(kcfg.col_pins[2] == 16);
-    assert(kcfg.col_pins[3] == 26);
+    assert(kcfg.row_pins[0] == 21);
+    assert(kcfg.row_pins[1] == 20);
+    assert(kcfg.row_pins[2] == 16);
+    assert(kcfg.row_pins[3] == 19);
+    assert(kcfg.col_pins[0] == 13);
+    assert(kcfg.col_pins[1] == 12);
+    assert(kcfg.col_pins[2] == 6);
+    assert(kcfg.col_pins[3] == 5);
     assert(kcfg.debounce_ms == 15);
 
     // Test NULL safety in config_set_defaults
     config_set_defaults(&tcfg, NULL);
     assert(tcfg.touch_enabled == 1);
     config_set_defaults(NULL, &kcfg);
-    assert(kcfg.col_pins[1] == 5);
+    assert(kcfg.row_pins[0] == 21);
+    assert(kcfg.row_pins[1] == 20);
+    assert(kcfg.row_pins[2] == 16);
+    assert(kcfg.row_pins[3] == 19);
+    assert(kcfg.col_pins[0] == 13);
+    assert(kcfg.col_pins[1] == 12);
+    assert(kcfg.col_pins[2] == 6);
+    assert(kcfg.col_pins[3] == 5);
 
     // First-run behavior: verify config_load returns -1 when no cfg files exist on disk
     const char *test_dir = "./tmp_config_test";
@@ -52,7 +59,7 @@ int main(void) {
     assert(config_load(test_dir, &loaded_t, &loaded_k) == -1);
     // Factory defaults should still be populated
     assert(loaded_t.touch_enabled == 1);
-    assert(loaded_k.col_pins[1] == 5);
+    assert(loaded_k.col_pins[1] == 12);
 
     // Save defaults to test dir (as main.c does on clean first run)
     assert(config_save(test_dir, &tcfg, &kcfg) == 0);
@@ -69,14 +76,14 @@ int main(void) {
     assert(loaded_t.screen_rotation == 270);
 
     assert(loaded_k.keypad_enabled == 0);
-    assert(loaded_k.row_pins[0] == 4);
-    assert(loaded_k.row_pins[1] == 27);
-    assert(loaded_k.row_pins[2] == 22);
-    assert(loaded_k.row_pins[3] == 23);
-    assert(loaded_k.col_pins[0] == 24);
-    assert(loaded_k.col_pins[1] == 5); // CRITICAL: Must be GPIO 5, NOT GPIO 25!
-    assert(loaded_k.col_pins[2] == 16);
-    assert(loaded_k.col_pins[3] == 26);
+    assert(loaded_k.row_pins[0] == 21);
+    assert(loaded_k.row_pins[1] == 20);
+    assert(loaded_k.row_pins[2] == 16);
+    assert(loaded_k.row_pins[3] == 19);
+    assert(loaded_k.col_pins[0] == 13);
+    assert(loaded_k.col_pins[1] == 12);
+    assert(loaded_k.col_pins[2] == 6);
+    assert(loaded_k.col_pins[3] == 5);
     assert(loaded_k.debounce_ms == 15);
 
     // Test custom values round-trip
@@ -100,14 +107,14 @@ int main(void) {
     assert(loaded_k.debounce_ms == 30);
 
     // CRITICAL SAFETY CHECK: Pin 22 (GPIO 25) reservation
-    // If a configuration file attempts to assign GPIO 25 to keypad, config_load MUST override it to safe GPIO 5
+    // If a configuration assigns display-reserved GPIO 25, it must use the verified safe map instead.
     FILE *fp = fopen("./tmp_config_test/doom_keypad.cfg", "w");
     assert(fp != NULL);
     fprintf(fp, "[keypad]\nenabled = 1\nrows = 4,27,22,23\ncols = 24,25,16,26\ndebounce_ms = 20\n");
     fclose(fp);
 
     assert(config_load(test_dir, &loaded_t, &loaded_k) == 0);
-    assert(loaded_k.col_pins[1] == 5); // Must NEVER allow GPIO 25!
+    assert(loaded_k.col_pins[1] == 12); // Must NEVER allow GPIO 25!
 
     // Verify partial loading: returns 0 if at least one file exists, -1 if neither
     remove("./tmp_config_test/doom_touch.cfg");

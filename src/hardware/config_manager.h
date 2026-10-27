@@ -26,9 +26,8 @@ typedef struct {
  *
  * Safe defaults:
  *  - Touch: enabled=1, opacity=0.55, deadzone=15, sensitivity=1.2, rotation=270
- *  - Keypad: enabled=0, rows=[4,27,22,23], cols=[24,5,16,26], debounce=15ms
- *  - Note: Physical Pin 22 (GPIO 25) is strictly reserved for LCD D/C.
- *          Col 2 is pinned to GPIO 5.
+ *  - Keypad: enabled=0, rows=[21,20,16,19], cols=[13,12,6,5], debounce=15ms
+ *  - Note: GPIO 25 is reserved by the SPI display and never used by the keypad.
  */
 void config_set_defaults(touch_config_t *tcfg, keypad_config_t *kcfg);
 

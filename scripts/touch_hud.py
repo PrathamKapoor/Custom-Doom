@@ -40,6 +40,7 @@ class Overlay:
         self.root.title("Custom Doom Touch HUD")
         self.root.attributes("-topmost", True)
         self.windows = {}
+        self.panel_signatures = {}
         self.last_keys = set()
         self.last_pause_events = controls.pause_events
         self.last_gesture = None
@@ -50,7 +51,8 @@ class Overlay:
         self.root.after(30, self.tick)
         self.root.after(8, self.poll_input)
 
-    def panel(self, key, title, color, x, y, w, h, draw):
+    def panel(self, key, title, color, x, y, w, h, draw, state=None):
+        signature = (title, color, x, y, w, h, state)
         win = self.windows.get(key)
         if win is None:
             win = tk.Toplevel(self.root, bg="#111820")
@@ -64,9 +66,14 @@ class Overlay:
             canvas.pack()
             self.windows[key] = win
             win.canvas = canvas
+        elif self.panel_signatures.get(key) == signature:
+            if not win.winfo_viewable():
+                win.deiconify()
+            return
         win.geometry(f"{w}x{h}+{max(0, x)}+{max(0, y)}")
         win.canvas.delete("all")
         draw(win.canvas, w, h, title, color)
+        self.panel_signatures[key] = signature
         if not win.winfo_viewable():
             win.deiconify()
 
@@ -103,7 +110,8 @@ class Overlay:
                 kx,ky=self.controls.stick_knob or (ax,ay)
                 ox,oy=(kx-ax)*sx,(ky-ay)*sy
                 canvas.coords(2,w/2-15+ox,h/2-15+oy,w/2+15+ox,h/2+15+oy)
-            self.panel("stick", "", "#24384a", round(ax*sx-size/2), round(ay*sy-size/2), size, size, stick)
+            self.panel("stick", "", "#24384a", round(ax*sx-size/2), round(ay*sy-size/2), size, size,
+                       stick, state=self.controls.stick_knob)
         elif "stick" in self.windows:
             self.windows["stick"].withdraw()
 
@@ -111,9 +119,11 @@ class Overlay:
         codes = self.evdev.ecodes
         wanted = {getattr(codes, code) for key in self.controls.keys for code in KEYS[key]}
         previous = {getattr(codes, code) for key in self.last_keys for code in KEYS[key]}
+        pause_delta = self.controls.pause_events - self.last_pause_events
+        if wanted == previous and pause_delta <= 0 and not self.controls.look_delta:
+            return
         for code in previous-wanted: self.ui.write(codes.EV_KEY, code, 0)
         for code in wanted-previous: self.ui.write(codes.EV_KEY, code, 1)
-        pause_delta = self.controls.pause_events - self.last_pause_events
         for _ in range(max(0, pause_delta)):
             self.ui.write(codes.EV_KEY, codes.KEY_PAUSE, 1)
             self.ui.syn()

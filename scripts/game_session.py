@@ -31,8 +31,13 @@ def main() -> int:
         state_dir = Path.home() / ".doom-touch"
         state_dir.mkdir(parents=True, exist_ok=True)
         hud_log = (state_dir / "touch-hud.log").open("a", encoding="utf-8")
+        helpers = []
         hud = subprocess.Popen([sys.executable, str(repo / "scripts" / "touch_hud.py")],
                                cwd=repo, stdout=hud_log, stderr=subprocess.STDOUT)
+        helpers.append(hud)
+        keypad = subprocess.Popen([sys.executable, str(repo / "scripts" / "keypad_bridge.py")],
+                                  cwd=repo, stdout=hud_log, stderr=subprocess.STDOUT)
+        helpers.append(keypad)
         time.sleep(0.5)
         if hud.poll() is not None and shutil.which("zenity"):
             subprocess.run(["zenity", "--error", "--title=Custom Doom Touch",
@@ -47,10 +52,11 @@ def main() -> int:
             game_process.terminate()
             try: game_process.wait(timeout=4)
             except subprocess.TimeoutExpired: game_process.kill()
-        if "hud" in locals() and hud.poll() is None:
-            hud.terminate()
-            try: hud.wait(timeout=2)
-            except subprocess.TimeoutExpired: hud.kill()
+        for helper in locals().get("helpers", []):
+            if helper.poll() is None:
+                helper.terminate()
+                try: helper.wait(timeout=2)
+                except subprocess.TimeoutExpired: helper.kill()
         if hud_log is not None:
             hud_log.close()
 

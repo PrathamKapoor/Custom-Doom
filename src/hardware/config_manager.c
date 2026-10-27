@@ -89,8 +89,8 @@ static void enforce_gpio_safety(keypad_config_t *kcfg) {
     if (!kcfg) return;
 
     // Factory safe fallbacks
-    static const int safe_rows[4] = {4, 27, 22, 23};
-    static const int safe_cols[4] = {24, 5, 16, 26};
+    static const int safe_rows[4] = {21, 20, 16, 19};
+    static const int safe_cols[4] = {13, 12, 6, 5};
 
     for (int i = 0; i < 4; i++) {
         if (kcfg->row_pins[i] == LCD_RESERVED_GPIO) {
@@ -108,10 +108,6 @@ static void enforce_gpio_safety(keypad_config_t *kcfg) {
         }
     }
 
-    // Explicit check for Col 2 (physical pin 29) -> MUST be GPIO 5
-    if (kcfg->col_pins[1] != 5 && kcfg->col_pins[1] == LCD_RESERVED_GPIO) {
-        kcfg->col_pins[1] = 5;
-    }
 }
 
 void config_set_defaults(touch_config_t *tcfg, keypad_config_t *kcfg) {
@@ -125,14 +121,14 @@ void config_set_defaults(touch_config_t *tcfg, keypad_config_t *kcfg) {
 
     if (kcfg) {
         kcfg->keypad_enabled = 0;
-        kcfg->row_pins[0] = 4;
-        kcfg->row_pins[1] = 27;
-        kcfg->row_pins[2] = 22;
-        kcfg->row_pins[3] = 23;
-        kcfg->col_pins[0] = 24;
-        kcfg->col_pins[1] = 5;  // GPIO 5, NOT GPIO 25!
-        kcfg->col_pins[2] = 16;
-        kcfg->col_pins[3] = 26;
+        kcfg->row_pins[0] = 21;
+        kcfg->row_pins[1] = 20;
+        kcfg->row_pins[2] = 16;
+        kcfg->row_pins[3] = 19;
+        kcfg->col_pins[0] = 13;
+        kcfg->col_pins[1] = 12;
+        kcfg->col_pins[2] = 6;
+        kcfg->col_pins[3] = 5;
         kcfg->debounce_ms = 15;
         for (int i = 0; i < 16; i++) {
             kcfg->key_bindings[i] = i;
@@ -262,7 +258,7 @@ int config_save(const char *dir_path, const touch_config_t *tcfg, const keypad_c
         if (!fp) return -1;
 
         fprintf(fp, "# DOOM 4x4 Matrix Keypad Configuration\n");
-        fprintf(fp, "# CRITICAL: GPIO 25 is reserved for LCD D/C. Col 2 is GPIO 5.\n");
+        fprintf(fp, "# BCM rows: 21,20,16,19; columns: 13,12,6,5. GPIO 25 is reserved.\n");
         fprintf(fp, "[keypad]\n");
         fprintf(fp, "enabled = %d\n", safe_copy.keypad_enabled);
         fprintf(fp, "rows = %d,%d,%d,%d\n",

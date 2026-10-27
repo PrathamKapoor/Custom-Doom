@@ -7,7 +7,8 @@ Play Doom on Raspberry Pi OS with the system Chocolate Doom port and a compact t
 - Raspberry Pi 4B running Raspberry Pi OS with an active X11 desktop.
 - 3.5-inch 480×320 SPI display with an XPT2046/ADS7846 resistive touchscreen.
 - One touch is available at a time. The controls use a floating movement pad, swipe-to-turn, held FIRE/USE, map, pause/resume, and optional auto-fire.
-- Keyboard input remains available. This overlay does not access GPIO or configure the display boot driver.
+- An 8-wire 4×4 keypad using the verified GPIO map below.
+- Keyboard input remains available. The keypad bridge only drives its mapped GPIO lines and does not change display boot settings.
 
 ## Install on Raspberry Pi OS
 
@@ -18,7 +19,7 @@ cd Custom-Doom
 ./scripts/install_dependencies.sh
 ```
 
-The installer uses Raspberry Pi OS packages for Chocolate Doom, Freedoom, Tk, evdev, and X11 compositing. It adds the logged-in user to the `input` group if needed and installs a udev rule limited to `/dev/uinput`. Log out and back in if the installer just added the group membership.
+The installer uses Raspberry Pi OS packages for Chocolate Doom, Freedoom, Tk, evdev, RPi.GPIO, and X11 compositing. It adds the logged-in user to the `input` and `gpio` groups if needed and installs a udev rule limited to `/dev/uinput`. Log out and back in if it added a group membership.
 
 Install the desktop and application-menu shortcuts:
 
@@ -26,7 +27,35 @@ Install the desktop and application-menu shortcuts:
 ./scripts/install_desktop_shortcut.sh
 ```
 
-Open **Custom Doom** from the desktop. The launcher starts map 1 fullscreen, then displays the HUD for the lifetime of the game. The touch overlay is not shown on the desktop or after the game closes.
+Open **Custom Doom** from the desktop. The launcher starts map 1 fullscreen and runs the touch HUD and keypad scanner only for the lifetime of the game.
+
+## Keypad wiring
+
+With the USB ports at the top, connect the ribbon wires to these physical header pins. Wires 1–4 form the matrix rows and wires 5–8 form its columns.
+
+| Ribbon wire | Physical pin | BCM GPIO | Matrix line |
+|---:|---:|---:|---|
+| 1 | 40 | 21 | Row 1 |
+| 2 | 38 | 20 | Row 2 |
+| 3 | 36 | 16 | Row 3 |
+| 4 | 35 | 19 | Row 4 |
+| 5 | 33 | 13 | Column 1 |
+| 6 | 32 | 12 | Column 2 |
+| 7 | 31 | 6 | Column 3 |
+| 8 | 29 | 5 | Column 4 |
+
+The scanner drives just one row low at a time and leaves the other rows floating. It polls at 100 Hz, debounces key edges, and releases all emulated keys when the game exits. GPIO 25 is not used.
+
+| Key | Doom action | Key | Doom action |
+|---:|---|---:|---|
+| 8 | Forward | 2 | Back |
+| 4 / 6 | Turn left / right | 1 / 3 | Strafe left / right |
+| 5 | Fire | 0 | Use / open |
+| # | Automap | * | Run |
+| 7 / 9 | Weapon 1 / 2 | A / B | Previous / next weapon |
+| C | Pause | D | Escape / menu |
+
+The number-pad movement and fire keys can be held together. The screen touch and keypad work at the same time.
 
 ## Game data
 
@@ -51,7 +80,7 @@ The overlay uses the ADS7846 calibration measured for this display. Set `DOOM_TO
 
 ## Requirements and troubleshooting
 
-- `chocolate-doom`, `freedoom`, `python3-tk`, `python3-evdev`, and `xcompmgr` (installed by the script).
+- `chocolate-doom`, `freedoom`, `python3-tk`, `python3-evdev`, `python3-rpi.gpio`, and `xcompmgr` (installed by the script).
 - A logged-in X11 desktop; the overlay needs X11 alpha compositing.
 - If keyboard play works but touch buttons do not, log out and in if the installer just added `input` group membership, then check that `/dev/uinput` belongs to group `input` with group read/write permission.
 - If the game starts with a missing IWAD message, confirm `freedoom1.wad` is installed or set `DOOM_IWAD` to a WAD file you are allowed to use.
@@ -63,7 +92,7 @@ Pure Python touch and launcher tests run on desktop systems:
 
 ```sh
 python3 -m unittest discover -s tests -p 'test_*.py' -v
-python3 -m py_compile scripts/touch_controls.py scripts/touch_hud.py scripts/launch_config.py scripts/game_session.py
+python3 -m py_compile scripts/touch_controls.py scripts/touch_hud.py scripts/keypad_controls.py scripts/keypad_bridge.py scripts/launch_config.py scripts/game_session.py
 ```
 
 The C prototype has its own build and tests:
@@ -80,6 +109,7 @@ The C prototype and its GPIO matrix diagnostic are separate from the Chocolate D
 - `scripts/game_session.py`, `scripts/launch.sh`: launch Chocolate Doom and tie the HUD lifetime to the game.
 - `scripts/touch_controls.py`: tested touch calibration and control state mapping.
 - `scripts/touch_hud.py`: Tk/evdev translucent overlay.
+- `scripts/keypad_controls.py`, `scripts/keypad_bridge.py`: tested controls and the BCM keypad scanner.
 - `scripts/install_dependencies.sh`, `scripts/install_desktop_shortcut.sh`: Pi setup and shortcut installation.
 - `src/`: experimental C raycasting and hardware-input prototype.
 - `tests/`: Python launcher/touch tests and C prototype tests.
