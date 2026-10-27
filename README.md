@@ -19,7 +19,7 @@ cd Custom-Doom
 ./scripts/install_dependencies.sh
 ```
 
-The installer uses Raspberry Pi OS packages for Chocolate Doom, Freedoom, Tk, evdev, RPi.GPIO, and X11 compositing. It adds the logged-in user to the `input` and `gpio` groups if needed and installs a udev rule limited to `/dev/uinput`. Log out and back in if it added a group membership.
+The installer uses Raspberry Pi OS packages for Chocolate Doom, Freedoom, Tk, evdev, the Raspberry Pi `rpi-lgpio` GPIO API, and X11 compositing. It adds the logged-in user to the `input` and `gpio` groups if needed and installs a udev rule limited to `/dev/uinput`. Log out and back in if it added a group membership.
 
 Install the desktop and application-menu shortcuts:
 
@@ -80,7 +80,7 @@ The overlay uses the ADS7846 calibration measured for this display. Set `DOOM_TO
 
 ## Requirements and troubleshooting
 
-- `chocolate-doom`, `freedoom`, `python3-tk`, `python3-evdev`, `python3-rpi.gpio`, and `xcompmgr` (installed by the script).
+- `chocolate-doom`, `freedoom`, `python3-tk`, `python3-evdev`, `python3-rpi-lgpio`, and `xcompmgr` (installed by the script).
 - A logged-in X11 desktop; the overlay needs X11 alpha compositing.
 - If keyboard play works but touch buttons do not, log out and in if the installer just added `input` group membership, then check that `/dev/uinput` belongs to group `input` with group read/write permission.
 - If the game starts with a missing IWAD message, confirm `freedoom1.wad` is installed or set `DOOM_IWAD` to a WAD file you are allowed to use.

@@ -3,7 +3,7 @@ set -euo pipefail
 
 if [[ $EUID -eq 0 ]]; then SUDO=; else SUDO=sudo; fi
 $SUDO apt-get update
-$SUDO apt-get install -y --no-install-recommends chocolate-doom freedoom python3-tk python3-evdev python3-rpi.gpio xcompmgr
+$SUDO apt-get install -y --no-install-recommends chocolate-doom freedoom python3-tk python3-evdev python3-rpi-lgpio xcompmgr
 
 CURRENT_USER="${SUDO_USER:-${USER:-}}"
 if [[ -n "$CURRENT_USER" && "$CURRENT_USER" != root ]]; then
@@ -22,6 +22,6 @@ if [[ -n "${DISPLAY:-}" ]] && ! pgrep -x xcompmgr >/dev/null 2>&1; then
     xcompmgr -aR >/dev/null 2>&1 &
 fi
 
-printf '\nInstalled Chocolate Doom, Freedoom, Tk, evdev, GPIO, and X11 compositing support.\n'
+printf '\nInstalled Chocolate Doom, Freedoom, Tk, evdev, RPi LGPIO, and X11 compositing support.\n'
 printf 'Log out and back in if this user was just added to the input or gpio group.\n'
 printf 'Then run scripts/install_desktop_shortcut.sh from this checkout.\n'

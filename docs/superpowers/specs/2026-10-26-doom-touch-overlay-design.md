@@ -30,7 +30,7 @@ The application starts the first map directly so the touch HUD appears only duri
 
 - `scripts/launch.sh` locates Chocolate Doom and a configured IWAD, starts directly in gameplay in the current X11 session, and runs the touch HUD alongside the engine.
 - `scripts/install_desktop_shortcut.sh` installs a desktop launcher under the invoking user's Desktop and application menu. It must use the current checkout path, mark the shortcut executable/trusted where supported, and not use sudo.
-- `scripts/install_dependencies.sh` installs Chocolate Doom, Freedoom, Python Tk, Python evdev, RPi.GPIO, and a lightweight X11 compositor needed for alpha blending. It adds only the needed `input`/`gpio` permissions and a udev rule limited to `/dev/uinput`; it must not rewrite boot display settings or apply a generic event-device rule.
+- `scripts/install_dependencies.sh` installs Chocolate Doom, Freedoom, Python Tk, Python evdev, the Raspberry Pi `rpi-lgpio` API, and a lightweight X11 compositor needed for alpha blending. It adds only the needed `input`/`gpio` permissions and a udev rule limited to `/dev/uinput`; it must not rewrite boot display settings or apply a generic event-device rule.
 - The existing display setup remains system-managed. The project must not replace the user's Xorg configuration or assume every 3.5-inch HAT shares the same pin mapping.
 
 ## Code boundaries
