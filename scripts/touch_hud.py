@@ -32,9 +32,26 @@ def discover_device(evdev):
     return evdev.InputDevice(path)
 
 
+def create_virtual_inputs(evdev):
+    """Expose a keyboard and relative mouse that desktop input can identify."""
+    codes = evdev.ecodes
+    keys = {getattr(codes, code) for mapping in KEYS.values() for code in mapping}
+    keys.update(getattr(codes, "KEY_" + chr(letter)) for letter in range(ord("A"), ord("Z") + 1))
+    keys.add(codes.KEY_PAUSE)
+    keyboard = evdev.UInput(events={codes.EV_KEY: sorted(keys)}, name="Custom Doom Touch Keyboard")
+    try:
+        mouse = evdev.UInput(events={codes.EV_KEY: [codes.BTN_LEFT],
+                                    codes.EV_REL: [codes.REL_X, codes.REL_Y]},
+                             name="Custom Doom Touch Mouse")
+    except Exception:
+        keyboard.close()
+        raise
+    return keyboard, mouse
+
+
 class Overlay:
-    def __init__(self, controls, ui, evdev, device):
-        self.controls, self.ui, self.evdev, self.device = controls, ui, evdev, device
+    def __init__(self, controls, ui, mouse_ui, evdev, device):
+        self.controls, self.ui, self.mouse_ui, self.evdev, self.device = controls, ui, mouse_ui, evdev, device
         self.root = tk.Tk()
         self.root.withdraw()
         self.root.title("Custom Doom Touch HUD")
@@ -129,7 +146,8 @@ class Overlay:
             self.ui.syn()
             self.ui.write(codes.EV_KEY, codes.KEY_PAUSE, 0)
         if self.controls.look_delta:
-            self.ui.write(codes.EV_REL, codes.REL_X, int(self.controls.look_delta*1.5))
+            self.mouse_ui.write(codes.EV_REL, codes.REL_X, int(self.controls.look_delta*1.5))
+            self.mouse_ui.syn()
         self.ui.syn()
         self.controls.look_delta = 0
         self.last_keys = set(self.controls.keys)
@@ -176,15 +194,13 @@ def main():
     try:
         import evdev
         device = discover_device(evdev)
-        key_codes = {getattr(evdev.ecodes, code) for mapping in KEYS.values() for code in mapping}
-        key_codes.add(evdev.ecodes.KEY_PAUSE)
-        ui = evdev.UInput(events={evdev.ecodes.EV_KEY: sorted(key_codes), evdev.ecodes.EV_REL: [evdev.ecodes.REL_X]})
+        ui, mouse_ui = create_virtual_inputs(evdev)
     except Exception as exc:
         print(f"Touch HUD unavailable: {exc}", file=sys.stderr)
         return 2
     controls = TouchControls()
     controls.set_game_active(True)
-    app = Overlay(controls, ui, evdev, device)
+    app = Overlay(controls, ui, mouse_ui, evdev, device)
     try:
         app.root.mainloop()
     except (OSError, tk.TclError):
@@ -192,7 +208,7 @@ def main():
     finally:
         controls.cancel()
         app.emit()
-        device.close(); ui.close()
+        device.close(); ui.close(); mouse_ui.close()
         try: app.root.destroy()
         except tk.TclError: pass
     return 0

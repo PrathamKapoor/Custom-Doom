@@ -1,8 +1,13 @@
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
+import sys
 
 from scripts.launch_config import desktop_entry, missing_requirements, select_iwad
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+import game_session
 
 
 class LauncherTests(unittest.TestCase):
@@ -24,6 +29,17 @@ class LauncherTests(unittest.TestCase):
         entry = desktop_entry(Path('/home/admin/My Doom/scripts/launch.sh'))
         self.assertIn('Exec="/home/admin/My Doom/scripts/launch.sh"', entry)
         self.assertTrue(entry.endswith("\n"))
+
+    def test_game_disables_sdl_touch_to_mouse_synthesis(self):
+        with patch.object(game_session.shutil, "which", return_value="/usr/games/chocolate-doom"), \
+             patch.object(game_session, "select_iwad", return_value=Path("/tmp/game.wad")), \
+             patch.object(game_session, "missing_requirements", return_value=[]), \
+             patch.object(game_session.subprocess, "Popen") as popen, \
+             patch.object(game_session.time, "sleep"):
+            popen.return_value.poll.return_value = 1
+            popen.return_value.returncode = 1
+            game_session.main()
+            self.assertEqual(popen.call_args.kwargs.get("env", {}).get("SDL_TOUCH_MOUSE_EVENTS"), "0")
 
 
 if __name__ == "__main__":

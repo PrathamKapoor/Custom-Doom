@@ -22,7 +22,10 @@ def main() -> int:
             subprocess.run(["zenity", "--error", "--title=Custom Doom", f"--text={message}"], check=False)
         return 2
 
-    game_process = subprocess.Popen([game, "-iwad", str(iwad), "-fullscreen", "-warp", "1"])
+    game_env = os.environ.copy()
+    # SDL otherwise translates touchscreen contacts into mouse-button presses.
+    game_env["SDL_TOUCH_MOUSE_EVENTS"] = "0"
+    game_process = subprocess.Popen([game, "-iwad", str(iwad), "-fullscreen", "-warp", "1"], env=game_env)
     hud_log = None
     try:
         time.sleep(1.0)
